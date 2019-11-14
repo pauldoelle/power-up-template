@@ -22,3 +22,10 @@ t.render(function(){
     return t.sizeTo('#content');
   });
 });
+
+<body>
+    <div id="content">
+        <div id="videos"></div>
+    </div>
+    <script src="./js/section.js"></script>
+</body>
