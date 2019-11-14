@@ -330,19 +330,13 @@ TrelloPowerUp.initialize({
   'card-badges': function(t, options){
     return getBadges(t);
   },
-  'card-buttons': function(t, options) {
+ 'card-buttons': function(t, options) {
     return [{
-      // usually you will provide a callback function to be run on button click
-      // we recommend that you use a popup on click generally
-      icon: GRAY_ICON, // don't use a colored icon here
-      text: 'Open Popup',
-      callback: cardButtonCallback
-    }, {
-      // but of course, you could also just kick off to a url if that's your thing
+      // YouTube!
       icon: GRAY_ICON,
-      text: 'Just a URL',
-      url: 'https://developers.trello.com',
-      target: 'Trello Developer Site' // optional target for above url
+      text: 'YouTube',
+      var GRAY_ICON = './images/yt_icon_gray.png';
+      callback: youTubeButtonCallback
     }];
   },
   'card-detail-badges': function(t, options) {
@@ -440,5 +434,64 @@ TrelloPowerUp.initialize({
     }
   }
 });
+
+var youTubeButtonCallback = function (t) {
+
+    return t.popup({
+        title: 'YouTube',
+        items: function (t, options) {
+
+            // use options.search which is the search text entered so far
+            // return a Promise that resolves to an array of items
+            // similar to the items you provided in the client side version above
+            var response = $.ajax({
+                url: "https://www.googleapis.com/youtube/v3/search",
+                data: {
+                    maxResults: '25',
+                    q: options.search,
+                    type: 'video',
+                    part: 'snippet',
+                    key: 'AIzaSyCHJilvZfEf40RTSWyGHs9e6XVOWfsL-Fg'
+                },
+                success: function (data) {
+                    //                console.log(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(errorThrown);
+                }
+            });
+
+            // when the response is finished, then return a list of items
+            return response.then(function (data) {
+                //                console.log(data);
+                var ret = new Array();
+                var items = data.items;
+                for (var i = 0; i < items.length; i++) {
+                    ret.push({
+                        text: items[i].snippet.title,
+                        callback: (function (item) {
+                            return function (t, opts) {
+                                return t.attach({
+                                    name: item.snippet.title, // optional
+                                    url: "https://www.youtube.com/embed/" + item.id.videoId // required
+                                });
+                            }
+                        })(items[i])
+                    });
+                }
+                return ret;
+            });
+        },
+        search: {
+            // optional # of ms to debounce search to
+            // defaults to 300, override must be larger than 300
+            debounce: 300,
+            placeholder: 'Search',
+            empty: 'No results',
+            searching: 'Searching'
+        }
+    });
+
+};
 
 console.log('Loaded by: ' + document.referrer);
